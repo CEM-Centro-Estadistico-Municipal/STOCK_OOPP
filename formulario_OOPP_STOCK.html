@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Stock – Corralón Municipal · Municipio de Esquina</title>
+<style>
+  :root {
+    --azul:      #1a3a6e;
+    --azul-med:  #2457a4;
+    --azul-claro:#e8eef8;
+    --dorado:    #c8922a;
+    --dorado-clr:#fdf3e1;
+    --gris-borde:#c8d0dc;
+    --gris-bg:   #f4f6f9;
+    --gris-label:#4a5568;
+    --verde:     #1a7c4e;
+    --verde-clr: #e6f4ed;
+    --rojo:      #c0392b;
+    --rojo-clr:  #fdecea;
+    --naranja:   #d4611e;
+    --naranja-clr:#fdf0e6;
+    --morado:    #5b3a8e;
+    --morado-clr:#f0eaf8;
+    --cyan:      #0e7490;
+    --cyan-clr:  #e0f2f9;
+    --amarillo:  #b45309;
+    --amarillo-clr:#fef3c7;
+    --blanco:    #ffffff;
+    --texto:     #1e2a3a;
+    --sombra:    0 2px 12px rgba(26,58,110,.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--gris-bg); color: var(--texto); min-height: 100vh; }
+
+  /* CABECERA */
+  header { background: var(--azul); color: var(--blanco); padding: 0; box-shadow: 0 3px 10px rgba(0,0,0,.25); }
+  .header-top { background: var(--dorado); height: 5px; }
+  .header-inner { display: flex; align-items: center; gap: 20px; padding: 18px 32px; }
+  .logo-escudo { width: 72px; height: 72px; flex-shrink: 0; background: var(--blanco); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px var(--dorado); font-size: 36px; }
+  .header-text h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: .5px; line-height: 1.2; }
+  .header-text p { font-size: .82rem; opacity: .85; margin-top: 3px; }
+  .header-badge { margin-left: auto; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 10px 18px; text-align: center; font-size: .75rem; }
+  .header-badge strong { display: block; font-size: 1rem; color: var(--dorado); }
+
+  /* TABS */
+  .tabs-bar { background: var(--azul-med); display: flex; overflow-x: auto; padding: 0 16px; gap: 2px; }
+  .tab-btn { background: transparent; border: none; color: rgba(255,255,255,.72); padding: 12px 16px; font-size: .82rem; font-weight: 600; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; transition: all .2s; display: flex; align-items: center; gap: 6px; }
+  .tab-btn:hover { color: #fff; background: rgba(255,255,255,.08); }
+  .tab-btn.active { color: #fff; border-bottom-color: var(--dorado); background: rgba(255,255,255,.1); }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 24px auto; padding: 0 16px 60px; }
+  .section { display: none; animation: fadeIn .25s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:none } }
+
+  /* CARD */
+  .card { background: var(--blanco); border-radius: 12px; box-shadow: var(--sombra); overflow: hidden; margin-bottom: 20px; }
+  .card-header { padding: 16px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--gris-borde); }
+  .card-header .icon-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+  .card-header h2 { font-size: 1rem; font-weight: 700; color: var(--azul); }
+  .card-header p { font-size: .78rem; color: var(--gris-label); margin-top: 2px; }
+  .card-body { padding: 24px; }
+
+  /* GRID */
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: repeat(4,1fr); }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+  .col-span-4 { grid-column: span 4; }
+  @media (max-width: 680px) {
+    .grid-2,.grid-3,.grid-4 { grid-template-columns: 1fr; }
+    .col-span-2,.col-span-3,.col-span-4 { grid-column: span 1; }
+    .header-inner { padding: 14px 16px; gap: 12px; }
+    .header-badge { display: none; }
+  }
+
+  /* CAMPOS */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: .78rem; font-weight: 600; color: var(--gris-label); text-transform: uppercase; letter-spacing: .4px; }
+  input[type="text"],input[type="number"],input[type="date"],input[type="email"],input[type="tel"],select,textarea {
+    border: 1.5px solid var(--gris-borde); border-radius: 7px; padding: 9px 12px; font-size: .9rem;
+    color: var(--texto); background: var(--blanco); transition: border-color .2s,box-shadow .2s; font-family: inherit; width: 100%;
+  }
+  input:focus,select:focus,textarea:focus { outline: none; border-color: var(--azul-med); box-shadow: 0 0 0 3px rgba(36,87,164,.15); }
+  input[readonly] { background: var(--azul-claro); color: var(--azul); font-weight: 600; cursor: default; }
+  select { cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%234a5568' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  .divider { font-size: .78rem; font-weight: 700; color: var(--azul); text-transform: uppercase; letter-spacing: .8px; padding: 10px 0 4px; border-bottom: 2px solid var(--azul-claro); margin-bottom: 4px; }
+  .info-box { background: var(--azul-claro); border-left: 4px solid var(--azul-med); border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: .8rem; color: var(--azul); margin-bottom: 18px; }
+
+  /* COLORES POR SECCIÓN */
+  .sec-dash   .icon-circle { background: var(--amarillo-clr); color: var(--amarillo); }
+  .sec-mat    .icon-circle { background: var(--cyan-clr);     color: var(--cyan); }
+  .sec-entrada .icon-circle { background: var(--verde-clr);   color: var(--verde); }
+  .sec-salida  .icon-circle { background: var(--rojo-clr);    color: var(--rojo); }
+  .sec-prov    .icon-circle { background: var(--naranja-clr); color: var(--naranja); }
+  .sec-stock   .icon-circle { background: var(--azul-claro);  color: var(--azul); }
+  .sec-obras   .icon-circle { background: var(--morado-clr);  color: var(--morado); }
+
+  .sec-dash   .card-header { border-left: 4px solid var(--amarillo); }
+  .sec-mat    .card-header { border-left: 4px solid var(--cyan); }
+  .sec-entrada .card-header { border-left: 4px solid var(--verde); }
+  .sec-salida  .card-header { border-left: 4px solid var(--rojo); }
+  .sec-prov    .card-header { border-left: 4px solid var(--naranja); }
+  .sec-stock   .card-header { border-left: 4px solid var(--azul-med); }
+  .sec-obras   .card-header { border-left: 4px solid var(--morado); }
+
+  /* BOTONES */
+  .btn-row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; flex-wrap: wrap; }
+  .btn { padding: 11px 26px; border-radius: 8px; border: none; font-size: .9rem; font-weight: 600; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 8px; }
+  .btn-secondary { background: var(--gris-bg); color: var(--gris-label); border: 1.5px solid var(--gris-borde); }
+  .btn-secondary:hover { background: #e5e9ef; }
+  .btn-primary { background: var(--azul); color: #fff; box-shadow: 0 3px 8px rgba(26,58,110,.3); }
+  .btn-primary:hover { background: var(--azul-med); }
+  .sec-entrada-btn { background: var(--verde)!important; } .sec-entrada-btn:hover { background: #165f3c!important; }
+  .sec-salida-btn  { background: var(--rojo)!important;  } .sec-salida-btn:hover  { background: #9b2d22!important; }
+  .sec-prov-btn    { background: var(--naranja)!important; } .sec-prov-btn:hover  { background: #b04e17!important; }
+  .sec-stock-btn   { background: var(--azul-med)!important; } .sec-stock-btn:hover { background: var(--azul)!important; }
+  .sec-obras-btn   { background: var(--morado)!important; } .sec-obras-btn:hover  { background: #4a2f75!important; }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 28px; right: 28px; min-width: 280px; max-width: 380px; padding: 16px 20px; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.18); font-size: .88rem; font-weight: 600; display: flex; align-items: center; gap: 12px; transform: translateY(80px); opacity: 0; transition: all .35s cubic-bezier(.34,1.56,.64,1); z-index: 1000; }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { background: var(--verde); color: #fff; }
+  #toast.error   { background: var(--rojo);  color: #fff; }
+  #toast.loading { background: var(--azul);  color: #fff; }
+  .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── DASHBOARD ────────────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+  @media(max-width:700px){ .kpi-grid { grid-template-columns: 1fr 1fr; } }
+  .kpi { background: var(--blanco); border-radius: 12px; box-shadow: var(--sombra); padding: 20px; display: flex; flex-direction: column; gap: 6px; position: relative; overflow: hidden; }
+  .kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+  .kpi-verde::before { background: var(--verde); }
+  .kpi-rojo::before  { background: var(--rojo); }
+  .kpi-azul::before  { background: var(--azul-med); }
+  .kpi-naranja::before { background: var(--naranja); }
+  .kpi-morado::before  { background: var(--morado); }
+  .kpi-dorado::before  { background: var(--dorado); }
+  .kpi-icon { font-size: 1.6rem; }
+  .kpi-val  { font-size: 2rem; font-weight: 800; color: var(--azul); line-height: 1; }
+  .kpi-lbl  { font-size: .75rem; font-weight: 600; color: var(--gris-label); text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-sub  { font-size: .72rem; color: #94a3b8; }
+
+  .dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width:700px){ .dash-row { grid-template-columns: 1fr; } }
+
+  .dash-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .dash-table th { background: var(--azul-claro); color: var(--azul); padding: 8px 12px; text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .4px; }
+  .dash-table td { padding: 8px 12px; border-bottom: 1px solid var(--gris-borde); }
+  .dash-table tr:last-child td { border-bottom: none; }
+  .dash-table tr:hover td { background: #f8faff; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: .7rem; font-weight: 700; }
+  .badge-verde  { background: var(--verde-clr);   color: var(--verde); }
+  .badge-rojo   { background: var(--rojo-clr);    color: var(--rojo); }
+  .badge-azul   { background: var(--azul-claro);  color: var(--azul-med); }
+  .badge-naranja{ background: var(--naranja-clr); color: var(--naranja); }
+  .badge-morado { background: var(--morado-clr);  color: var(--morado); }
+
+  .bar-wrap { margin-top: 4px; height: 6px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width .8s ease; }
+
+  /* ── HOJA DE MATERIALES ───────────────────────── */
+  .filter-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-end; }
+  .filter-row .field { flex: 1; min-width: 160px; }
+  .filter-row .field-sm { flex: 0 0 140px; }
+
+  .mat-table-wrap { overflow-x: auto; }
+  .mat-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+  .mat-table th { background: var(--azul); color: #fff; padding: 10px 14px; text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .4px; white-space: nowrap; }
+  .mat-table td { padding: 9px 14px; border-bottom: 1px solid var(--gris-borde); white-space: nowrap; }
+  .mat-table tr:hover td { background: #f0f5ff; }
+  .mat-table tr.stock-bajo td { background: #fff5f5; }
+  .mat-table tr.stock-ok   td { background: #f0faf5; }
+  .mat-count { font-size: .78rem; color: var(--gris-label); margin-top: 10px; }
+
+  footer { text-align: center; font-size: .74rem; color: #8898aa; padding: 18px; border-top: 1px solid var(--gris-borde); }
+</style>
+</head>
+<body>
+
+<div id="loading-overlay" style="
+    position:fixed;inset:0;background:rgba(26,58,110,.82);z-index:9999;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#fff">
+    <div style="width:52px;height:52px;border:5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite"></div>
+    <div style="font-size:1.1rem;font-weight:700">Cargando datos desde Google Sheets…</div>
+    <div style="font-size:.82rem;opacity:.75">Conectando con el sistema de stock del corralón</div>
+  </div>
+<header>
+  <div class="header-top"></div>
+  <div class="header-inner">
+    <div class="logo-escudo">🏛️</div>
+    <div class="header-text">
+      <h1>MUNICIPIO DE ESQUINA · CORRIENTES</h1>
+      <p>Dirección de Obras Públicas &nbsp;|&nbsp; Sistema de Control de Stock de Corralones</p>
+    </div>
+    <div class="header-badge">
+      <strong id="fecha-hoy">—</strong>
+      Fecha actual
+    </div>
+  </div>
+</header>
+
+<div class="tabs-bar">
+  <button class="tab-btn active"  onclick="showTab('mat',this)">     <span>📋</span> Materiales en Stock</button>
+  <button class="tab-btn"         onclick="showTab('entrada',this)"> <span>📥</span> Entrada</button>
+  <button class="tab-btn"         onclick="showTab('salida',this)">  <span>📤</span> Salida</button>
+  <button class="tab-btn"         onclick="showTab('prov',this)">    <span>🏢</span> Proveedores</button>
+  <button class="tab-btn"         onclick="showTab('stock',this)">   <span>📦</span> Stock General</button>
+  <button class="tab-btn"         onclick="showTab('obras',this)">   <span>🏗️</span> Destino / Obras</button>
+</div>
+
+<main>
+
+<!-- ══ DASHBOARD ════════════════════════════════════ -->
+<div id="sec-dash" class="section">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi kpi-azul">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-val" id="kpi-total-mat">15</div>
+      <div class="kpi-lbl">Materiales en catálogo</div>
+      <div class="kpi-sub">Catálogo maestro activo</div>
+    </div>
+    <div class="kpi kpi-verde">
+      <div class="kpi-icon">📥</div>
+      <div class="kpi-val" id="kpi-entradas">1</div>
+      <div class="kpi-lbl">Entradas registradas</div>
+      <div class="kpi-sub">Desde inicio del sistema</div>
+    </div>
+    <div class="kpi kpi-rojo">
+      <div class="kpi-icon">📤</div>
+      <div class="kpi-val" id="kpi-salidas">1</div>
+      <div class="kpi-lbl">Salidas registradas</div>
+      <div class="kpi-sub">Desde inicio del sistema</div>
+    </div>
+    <div class="kpi kpi-naranja">
+      <div class="kpi-icon">🏢</div>
+      <div class="kpi-val" id="kpi-proveedores">10</div>
+      <div class="kpi-lbl">Proveedores activos</div>
+      <div class="kpi-sub">Habilitados para compras</div>
+    </div>
+    <div class="kpi kpi-morado">
+      <div class="kpi-icon">🏗️</div>
+      <div class="kpi-val" id="kpi-obras">8</div>
+      <div class="kpi-lbl">Obras registradas</div>
+      <div class="kpi-sub">En ejecución y por iniciar</div>
+    </div>
+    <div class="kpi kpi-rojo">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-val" id="kpi-stock-bajo">0</div>
+      <div class="kpi-lbl">Stock bajo mínimo</div>
+      <div class="kpi-sub">Requieren reposición</div>
+    </div>
+    <div class="kpi kpi-verde">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-val" id="kpi-stock-ok">15</div>
+      <div class="kpi-lbl">Materiales con stock OK</div>
+      <div class="kpi-sub">Dentro de parámetros</div>
+    </div>
+    <div class="kpi kpi-dorado">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-val" id="kpi-mes">—</div>
+      <div class="kpi-lbl">Movimientos este mes</div>
+      <div class="kpi-sub">Entradas + Salidas</div>
+    </div>
+  </div>
+
+  <div class="dash-row">
+    <!-- Catálogo de materiales por categoría -->
+    <div class="card sec-dash">
+      <div class="card-header">
+        <div class="icon-circle">📊</div>
+        <div><h2>Materiales por Categoría</h2><p>Distribución del catálogo maestro</p></div>
+      </div>
+      <div class="card-body" style="padding:16px 24px">
+        <div id="dash-categorias"></div>
+      </div>
+    </div>
+
+    <!-- Materiales con stock bajo -->
+    <div class="card sec-dash">
+      <div class="card-header">
+        <div class="icon-circle">⚠️</div>
+        <div><h2>Estado de Stock</h2><p>Materiales según nivel de stock actual</p></div>
+      </div>
+      <div class="card-body" style="padding:16px 24px">
+        <table class="dash-table" id="dash-stock-estado">
+          <thead><tr><th>Material</th><th>Unidad</th><th>Stock Actual</th><th>Stock Mín.</th><th>Estado</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-row" style="margin-top:16px">
+    <!-- Proveedores por categoría -->
+    <div class="card sec-dash">
+      <div class="card-header">
+        <div class="icon-circle">🏢</div>
+        <div><h2>Proveedores Activos</h2><p>Habilitados por rubro</p></div>
+      </div>
+      <div class="card-body" style="padding:16px 24px">
+        <table class="dash-table">
+          <thead><tr><th>Proveedor</th><th>Categoría</th><th>Condición pago</th><th>Estado</th></tr></thead>
+          <tbody id="dash-proveedores"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Obras en ejecución -->
+    <div class="card sec-dash">
+      <div class="card-header">
+        <div class="icon-circle">🏗️</div>
+        <div><h2>Obras Activas</h2><p>Destinos de materiales registrados</p></div>
+      </div>
+      <div class="card-body" style="padding:16px 24px">
+        <table class="dash-table">
+          <thead><tr><th>Código</th><th>Obra</th><th>Responsable</th><th>Estado</th></tr></thead>
+          <tbody id="dash-obras"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas de stock bajo -->
+  <div class="card sec-dash" style="margin-top:16px">
+    <div class="card-header">
+      <div class="icon-circle">🚨</div>
+      <div><h2>Alertas de Reposición</h2><p>Materiales por debajo del stock mínimo establecido</p></div>
+      <button class="btn btn-secondary" onclick="cargarStatsDesdeSheet()" style="margin-left:auto;padding:7px 14px;font-size:.78rem">🔄 Actualizar datos</button>
+    </div>
+    <div class="card-body" style="padding:16px 24px">
+      <div id="dash-alertas-wrap">
+        <table class="dash-table" id="dash-alertas">
+          <thead><tr><th>Código</th><th>Material</th><th>Unidad</th><th>Stock Actual</th><th>Stock Mín.</th><th>Faltante</th><th>Estado</th></tr></thead>
+          <tbody id="dash-alertas-body"></tbody>
+        </table>
+        <p id="dash-alertas-ok" style="display:none;color:var(--verde);font-weight:600;padding:12px 0">✅ Todos los materiales tienen stock suficiente.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ MATERIALES EN STOCK ═══════════════════════════ -->
+<div id="sec-mat" class="section active">
+  <div class="card sec-mat">
+    <div class="card-header">
+      <div class="icon-circle">📋</div>
+      <div>
+        <h2>Catálogo de Materiales en Stock</h2>
+        <p>Consulta y filtrado del catálogo maestro del corralón.</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="filter-row">
+        <div class="field">
+          <label>Buscar por nombre o código</label>
+          <input type="text" id="flt-buscar" placeholder="Escribir para filtrar…" oninput="filtrarMateriales()">
+        </div>
+        <div class="field field-sm">
+          <label>Categoría</label>
+          <select id="flt-categoria" onchange="filtrarMateriales()">
+            <option value="">Todas</option>
+            <option>Cementos</option>
+            <option>Agregados</option>
+            <option>Ladrillos</option>
+            <option>Bloques</option>
+            <option>Acero</option>
+            <option>Tubería</option>
+            <option>Fijación</option>
+            <option>Madera</option>
+          </select>
+        </div>
+        <div class="field field-sm">
+          <label>Estado de stock</label>
+          <select id="flt-estado" onchange="filtrarMateriales()">
+            <option value="">Todos</option>
+            <option value="ok">✅ Stock OK</option>
+            <option value="bajo">⚠️ Bajo mínimo</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn btn-secondary" onclick="limpiarFiltros()" style="margin-top:18px">↺ Limpiar</button>
+        </div>
+      </div>
+      <div class="mat-table-wrap">
+        <table class="mat-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Material</th>
+              <th>Categoría</th>
+              <th>Unidad</th>
+              <th>Stock Actual</th>
+              <th>Stock Mín.</th>
+              <th>Stock Máx.</th>
+              <th>Ubicación</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="mat-tbody"></tbody>
+        </table>
+      </div>
+      <div class="mat-count" id="mat-count"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ENTRADA ═══════════════════════════════════════ -->
+<div id="sec-entrada" class="section">
+  <div class="card sec-entrada">
+    <div class="card-header">
+      <div class="icon-circle">📥</div>
+      <div><h2>Registro de Entrada de Materiales</h2><p>Complete los datos del ingreso al corralón municipal.</p></div>
+    </div>
+    <div class="card-body">
+      <div class="grid grid-3">
+        <div class="field">
+          <label>Fecha de entrada</label>
+          <input type="date" id="ent_fecha">
+        </div>
+        <div class="field">
+          <label>N° Factura / Guía</label>
+          <input type="text" id="ent_factura" placeholder="Ej: F-4521">
+        </div>
+        <div class="field">
+          <label>Recibió</label>
+          <input type="text" id="ent_recibio" placeholder="Nombre y apellido">
+        </div>
+      </div>
+      <div class="divider" style="margin-top:20px">Datos del Material</div>
+      <div class="grid grid-2" style="margin-top:12px">
+        <div class="field">
+          <label>Código de material</label>
+          <select id="ent_codigo" onchange="autoUnidad('ent')">
+            <option value="">— Seleccionar material —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cantidad</label>
+          <input type="number" id="ent_cantidad" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label>Unidad (automática)</label>
+          <input type="text" id="ent_unidad" readonly placeholder="Se completa al elegir material">
+        </div>
+        <div class="field">
+          <label>Proveedor</label>
+          <select id="ent_proveedor">
+            <option value="">— Seleccionar —</option>
+            <option>Construmart S.A.</option>
+            <option>Arenera Los Andes</option>
+            <option>Cerámicas Perú</option>
+            <option>Aceros Arequipa</option>
+            <option>Cantera El Sol</option>
+            <option>Tuboplast</option>
+            <option>Ferretería El Martillo</option>
+            <option>Maderas del Norte</option>
+            <option>Ladrillos San Juan</option>
+            <option>Hierros del Pacífico</option>
+            <option>Otro proveedor</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ubicación en depósito</label>
+          <select id="ent_ubicacion">
+            <option value="">— Seleccionar corralón —</option>
+            <option>Corralón I</option>
+            <option>Corralón II</option>
+            <option>Corralón III</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Observaciones</label>
+          <input type="text" id="ent_obs" placeholder="Notas adicionales">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="limpiar('entrada')">🗑 Limpiar</button>
+        <button class="btn btn-primary sec-entrada-btn" onclick="enviar('entrada')">✅ Registrar Entrada</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SALIDA ═════════════════════════════════════════ -->
+<div id="sec-salida" class="section">
+  <div class="card sec-salida">
+    <div class="card-header">
+      <div class="icon-circle">📤</div>
+      <div><h2>Registro de Salida de Materiales</h2><p>Registre el retiro de materiales del corralón hacia obras.</p></div>
+    </div>
+    <div class="card-body">
+      <div class="grid grid-3">
+        <div class="field">
+          <label>Fecha de salida</label>
+          <input type="date" id="sal_fecha">
+        </div>
+        <div class="field">
+          <label>Solicitó</label>
+          <input type="text" id="sal_solicito" placeholder="Nombre y apellido">
+        </div>
+        <div class="field">
+          <label>Autorizó</label>
+          <input type="text" id="sal_autorizo" placeholder="Nombre y apellido">
+        </div>
+      </div>
+      <div class="divider" style="margin-top:20px">Datos del Material</div>
+      <div class="grid grid-2" style="margin-top:12px">
+        <div class="field">
+          <label>Código de material</label>
+          <select id="sal_codigo" onchange="autoUnidad('sal')">
+            <option value="">— Seleccionar material —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cantidad</label>
+          <input type="number" id="sal_cantidad" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="field">
+          <label>Unidad (automática)</label>
+          <input type="text" id="sal_unidad" readonly placeholder="Se completa al elegir material">
+        </div>
+        <div class="field">
+          <label>Destino / Obra</label>
+          <select id="sal_destino">
+            <option value="">— Seleccionar obra —</option>
+            <option>OB-001 · Edificio Residencial A</option>
+            <option>OB-002 · Casa Modelo 3</option>
+            <option>OB-003 · Centro Comercial Plaza</option>
+            <option>OB-004 · Remodelación Oficinas BCP</option>
+            <option>OB-005 · Colegio San Agustín</option>
+            <option>OB-006 · Galpón Industrial</option>
+            <option>OB-007 · Residencial Los Olivos</option>
+            <option>OB-008 · Clínica del Norte</option>
+            <option>Otro / Uso interno</option>
+          </select>
+        </div>
+        <div class="field col-span-2">
+          <label>Observaciones</label>
+          <input type="text" id="sal_obs" placeholder="Notas adicionales o condición especial">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="limpiar('salida')">🗑 Limpiar</button>
+        <button class="btn btn-primary sec-salida-btn" onclick="enviar('salida')">✅ Registrar Salida</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROVEEDORES ════════════════════════════════════ -->
+<div id="sec-prov" class="section">
+  <div class="card sec-prov">
+    <div class="card-header">
+      <div class="icon-circle">🏢</div>
+      <div><h2>Registro de Proveedores</h2><p>Alta o actualización de proveedores habilitados para el corralón.</p></div>
+    </div>
+    <div class="card-body">
+      <div class="divider">Datos de la empresa</div>
+      <div class="grid grid-2" style="margin-top:12px">
+        <div class="field"><label>Razón social</label><input type="text" id="prov_razon" placeholder="Nombre legal de la empresa"></div>
+        <div class="field"><label>CUIT / CUIL</label><input type="text" id="prov_ruc" placeholder="Ej: 30-12345678-9"></div>
+        <div class="field">
+          <label>Categoría / Rubro</label>
+          <select id="prov_categoria">
+            <option value="">— Seleccionar —</option>
+            <option>Cementos</option><option>Agregados</option><option>Ladrillos y Bloques</option>
+            <option>Acero y Hierros</option><option>Tubería y Sanitarios</option><option>Fijación y Ferretería</option>
+            <option>Madera y Carpintería</option><option>Pinturas y Acabados</option><option>Herramientas</option><option>Varios / General</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Estado</label>
+          <select id="prov_estado"><option>ACTIVO</option><option>INACTIVO</option></select>
+        </div>
+      </div>
+      <div class="divider" style="margin-top:20px">Contacto</div>
+      <div class="grid grid-3" style="margin-top:12px">
+        <div class="field"><label>Nombre de contacto</label><input type="text" id="prov_contacto" placeholder="Nombre y apellido"></div>
+        <div class="field"><label>Teléfono</label><input type="tel" id="prov_telefono" placeholder="Ej: 03777-123456"></div>
+        <div class="field"><label>Correo electrónico</label><input type="email" id="prov_email" placeholder="correo@proveedor.com"></div>
+      </div>
+      <div class="divider" style="margin-top:20px">Condiciones comerciales</div>
+      <div class="grid grid-2" style="margin-top:12px">
+        <div class="field"><label>Dirección / Localidad</label><input type="text" id="prov_direccion" placeholder="Calle, número, ciudad"></div>
+        <div class="field">
+          <label>Condición de pago</label>
+          <select id="prov_pago">
+            <option value="">— Seleccionar —</option>
+            <option>Contado</option><option>Crédito 15 días</option><option>Crédito 30 días</option>
+            <option>Crédito 45 días</option><option>Crédito 60 días</option><option>Cuenta corriente municipal</option>
+          </select>
+        </div>
+        <div class="field col-span-2"><label>Observaciones</label><textarea id="prov_obs" placeholder="Notas sobre el proveedor, horarios de entrega..."></textarea></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="limpiar('prov')">🗑 Limpiar</button>
+        <button class="btn btn-primary sec-prov-btn" onclick="enviar('prov')">✅ Guardar Proveedor</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STOCK GENERAL ══════════════════════════════════ -->
+<div id="sec-stock" class="section">
+  <div class="card sec-stock">
+    <div class="card-header">
+      <div class="icon-circle">📦</div>
+      <div><h2>Stock General – Catálogo de Materiales</h2><p>Alta o modificación de materiales en el catálogo maestro.</p></div>
+    </div>
+    <div class="card-body">
+      <div class="info-box">Use esta sección para agregar nuevos materiales al catálogo o actualizar parámetros de stock. Los cambios se reflejan automáticamente en Entradas y Salidas.</div>
+      <div class="grid grid-2">
+        <div class="field"><label>Código de material</label><input type="text" id="stk_codigo" placeholder="Ej: MAT-016"></div>
+        <div class="field"><label>Nombre del material</label><input type="text" id="stk_material" placeholder="Descripción completa"></div>
+        <div class="field">
+          <label>Categoría</label>
+          <select id="stk_categoria">
+            <option value="">— Seleccionar —</option>
+            <option>Cementos</option><option>Agregados</option><option>Ladrillos</option><option>Bloques</option>
+            <option>Acero</option><option>Tubería</option><option>Fijación</option><option>Madera</option>
+            <option>Pinturas</option><option>Herramientas</option><option>Varios</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Unidad de medida</label>
+          <select id="stk_unidad">
+            <option value="">— Seleccionar —</option>
+            <option>Bolsa 50kg</option><option>Bolsa 20kg</option><option>m³</option><option>Barra 9m</option>
+            <option>Plancha 2.4x6m</option><option>Plancha 1.22x2.44m</option><option>Unidad</option>
+            <option>Millar</option><option>Kg</option><option>Pies Tabla</option><option>Metro lineal</option><option>Litro</option>
+          </select>
+        </div>
+      </div>
+      <div class="divider" style="margin-top:20px">Parámetros de stock</div>
+      <div class="grid grid-3" style="margin-top:12px">
+        <div class="field"><label>Stock mínimo</label><input type="number" id="stk_min" placeholder="0" min="0"></div>
+        <div class="field"><label>Stock máximo</label><input type="number" id="stk_max" placeholder="0" min="0"></div>
+        <div class="field">
+          <label>Ubicación en depósito</label>
+          <select id="stk_ubicacion">
+            <option value="">— Seleccionar corralón —</option>
+            <option>Corralón I</option>
+            <option>Corralón II</option>
+            <option>Corralón III</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="limpiar('stock')">🗑 Limpiar</button>
+        <button class="btn btn-primary sec-stock-btn" onclick="enviar('stock')">✅ Guardar en Catálogo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OBRAS / DESTINOS ═══════════════════════════════ -->
+<div id="sec-obras" class="section">
+  <div class="card sec-obras">
+    <div class="card-header">
+      <div class="icon-circle">🏗️</div>
+      <div><h2>Registro de Obras y Destinos</h2><p>Alta de obras o destinos que recibirán materiales del corralón.</p></div>
+    </div>
+    <div class="card-body">
+      <div class="grid grid-2">
+        <div class="field"><label>Código de obra</label><input type="text" id="ob_codigo" placeholder="Ej: OB-009"></div>
+        <div class="field"><label>Nombre / Descripción de obra</label><input type="text" id="ob_nombre" placeholder="Ej: Pavimentación Calle Mitre"></div>
+        <div class="field"><label>Ubicación / Dirección</label><input type="text" id="ob_ubicacion" placeholder="Calle, barrio o paraje"></div>
+        <div class="field">
+          <label>Estado de la obra</label>
+          <select id="ob_estado">
+            <option>EN EJECUCIÓN</option><option>POR INICIAR</option><option>FINALIZADA</option><option>SUSPENDIDA</option>
+          </select>
+        </div>
+      </div>
+      <div class="divider" style="margin-top:20px">Responsables y plazos</div>
+      <div class="grid grid-2" style="margin-top:12px">
+        <div class="field"><label>Cliente / Comitente</label><input type="text" id="ob_cliente" placeholder="Organismo o comitente"></div>
+        <div class="field"><label>Responsable técnico</label><input type="text" id="ob_responsable" placeholder="Nombre del responsable"></div>
+        <div class="field"><label>Fecha de inicio</label><input type="date" id="ob_inicio"></div>
+        <div class="field"><label>Fecha estimada de fin</label><input type="date" id="ob_fin"></div>
+        <div class="field col-span-2"><label>Observaciones</label><textarea id="ob_obs" placeholder="Características, estado del expediente, notas de campo..."></textarea></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="limpiar('obras')">🗑 Limpiar</button>
+        <button class="btn btn-primary sec-obras-btn" onclick="enviar('obras')">✅ Registrar Obra</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+<footer>Municipio de Esquina · Dirección de Obras Públicas &nbsp;|&nbsp; Sistema de Control de Stock de Corralones &nbsp;|&nbsp; 2025–2026</footer>
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  CONTROL DE STOCK · CORRALÓN MUNICIPAL
+//  HTML v3 — conectado a Google Sheets en tiempo real
+//  Reemplazar la URL con la del nuevo deployment de Apps Script
+// ════════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVjAIlLTJrhPfVQtGzViiEqglLD3YNA9ENXWYQPdV2wfj4rrU2RTLGf_9Zr1yRLAsM/exec';
+
+// Datos en memoria — se cargan desde el Sheet al iniciar
+let CATALOGO     = [];
+let PROVEEDORES  = [];
+let OBRAS        = [];
+let STOCK_ACTUAL = {};   // { 'MAT-001': { stockActual, totalEntradas, totalSalidas, estado } }
+let STATS        = { entradas: '…', salidas: '…', movMes: '…' };
+let CARGANDO     = true;
+
+// ── INIT ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const d = new Date();
+  document.getElementById('fecha-hoy').textContent =
+    d.toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' });
+  const iso = d.toISOString().split('T')[0];
+  ['ent_fecha','sal_fecha'].forEach(id => { const el = document.getElementById(id); if(el) el.value = iso; });
+  cargarTodosLosDatos();
+});
+
+// ── CARGA INICIAL DESDE SHEET ────────────────────────
+async function cargarTodosLosDatos(silencioso = false) {
+  if (!silencioso) mostrarCargando(true);
+  try {
+    // Usamos fetch con redirect:'follow' que es necesario para Apps Script
+    // Apps Script hace un redirect 302 antes de devolver la respuesta
+    const res = await fetch(APPS_SCRIPT_URL + '?action=todos', {
+      method: 'GET',
+      redirect: 'follow',
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+
+    if (d.catalogo)    CATALOGO    = d.catalogo;
+    if (d.proveedores) PROVEEDORES = d.proveedores;
+    if (d.obras)       OBRAS       = d.obras;
+    if (d.stats)       STATS       = d.stats;
+
+    // Combinar catálogo con stock actual
+    if (d.stock) {
+      d.stock.forEach(s => { STOCK_ACTUAL[s.codigo] = s; });
+      CATALOGO.forEach(m => {
+        const s = STOCK_ACTUAL[m.codigo];
+        m.stockActual = s ? s.stockActual : 0;
+      });
+    }
+
+    CARGANDO = false;
+    poblarSelectMateriales();
+    poblarSelectProveedores();
+    poblarSelectObras();
+    actualizarKPIs();
+    renderDashboard();
+    renderMatTable(CATALOGO);
+    renderDashProveedores();
+    renderDashObras();
+    if (!silencioso) mostrarCargando(false);
+    else toast('Datos actualizados desde Google Sheets ✓', 'success', 3000);
+  } catch(e) {
+    console.error('Error cargando datos:', e);
+    mostrarCargando(false);
+    // Intentar via JSONP como fallback
+    cargarViaJsonp(silencioso);
+  }
+}
+
+function mostrarCargando(activo) {
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.style.display = activo ? 'flex' : 'none';
+}
+
+// ── TABS ─────────────────────────────────────────────
+function showTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── POBLAR SELECTS ───────────────────────────────────
+function poblarSelectMateriales() {
+  ['ent_codigo','sal_codigo'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const val = sel.value;
+    sel.innerHTML = '<option value="">— Seleccionar material —</option>';
+    CATALOGO.forEach(m => {
+      const op = document.createElement('option');
+      op.value = m.codigo;
+      op.textContent = m.codigo + ' · ' + m.material;
+      op.dataset.unidad = m.unidad;
+      op.dataset.material = m.material;
+      sel.appendChild(op);
+    });
+    if (val) sel.value = val;
+  });
+}
+
+function poblarSelectProveedores() {
+  const sel = document.getElementById('ent_proveedor');
+  if (!sel) return;
+  const activos = PROVEEDORES.filter(p => p.estado === 'ACTIVO' || p.estado === 'Activo');
+  sel.innerHTML = '<option value="">— Seleccionar proveedor —</option>';
+  activos.forEach(p => {
+    const op = document.createElement('option');
+    op.value = p.razon;
+    op.textContent = p.razon + (p.categoria ? ' (' + p.categoria + ')' : '');
+    sel.appendChild(op);
+  });
+  const otro = document.createElement('option');
+  otro.value = 'Otro proveedor';
+  otro.textContent = 'Otro proveedor';
+  sel.appendChild(otro);
+}
+
+function poblarSelectObras() {
+  const sel = document.getElementById('sal_destino');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Seleccionar obra —</option>';
+  OBRAS.forEach(o => {
+    const op = document.createElement('option');
+    op.value = o.codigo + ' · ' + o.nombre;
+    op.textContent = o.codigo + ' · ' + o.nombre + (o.estado !== 'EN EJECUCIÓN' ? ' [' + o.estado + ']' : '');
+    sel.appendChild(op);
+  });
+  const otro = document.createElement('option');
+  otro.value = 'Otro / Uso interno';
+  otro.textContent = 'Otro / Uso interno';
+  sel.appendChild(otro);
+}
+
+// ── AUTO UNIDAD ──────────────────────────────────────
+function autoUnidad(prefix) {
+  const sel = document.getElementById(prefix + '_codigo');
+  const inp = document.getElementById(prefix + '_unidad');
+  const matInp = document.getElementById(prefix + '_material_display');
+  if (!sel || !inp) return;
+  const opt = sel.options[sel.selectedIndex];
+  inp.value = opt && opt.dataset.unidad ? opt.dataset.unidad : '';
+  if (matInp && opt) matInp.value = opt.dataset.material || '';
+}
+
+// ── TABLA MATERIALES ─────────────────────────────────
+function renderMatTable(lista) {
+  const tbody = document.getElementById('mat-tbody');
+  const count = document.getElementById('mat-count');
+  if (!tbody) return;
+  if (lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#94a3b8">' +
+      (CARGANDO ? '⏳ Cargando datos desde Google Sheets…' : 'No se encontraron materiales.') + '</td></tr>';
+    if (count) count.textContent = '';
+    return;
+  }
+  tbody.innerHTML = lista.map(m => {
+    const stock = m.stockActual !== undefined ? m.stockActual : 0;
+    const pct   = m.stockMax > 0 ? Math.min(100, Math.round((stock / m.stockMax) * 100)) : 0;
+    const bajo  = stock < m.stockMin;
+    const color = bajo ? '#ef4444' : '#1a7c4e';
+    const rowClass = bajo ? 'stock-bajo' : 'stock-ok';
+    const badge = bajo
+      ? '<span class="badge badge-rojo">⚠️ Bajo mínimo</span>'
+      : '<span class="badge badge-verde">✅ Stock OK</span>';
+    return `<tr class="${rowClass}">
+      <td><strong>${m.codigo}</strong></td>
+      <td>${m.material}</td>
+      <td><span class="badge badge-azul">${m.categoria}</span></td>
+      <td>${m.unidad}</td>
+      <td><strong style="color:${color}">${stock}</strong>
+        <div class="bar-wrap" style="min-width:60px;margin-top:3px"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      </td>
+      <td>${m.stockMin}</td>
+      <td>${m.stockMax}</td>
+      <td style="font-size:.78rem;color:#64748b">${m.ubicacion}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+  if (count) count.textContent = `Mostrando ${lista.length} de ${CATALOGO.length} materiales`;
+}
+
+// ── FILTROS MATERIALES ───────────────────────────────
+function filtrarMateriales() {
+  const txt = (document.getElementById('flt-buscar').value || '').toLowerCase();
+  const cat = document.getElementById('flt-categoria').value;
+  const est = document.getElementById('flt-estado').value;
+  const res = CATALOGO.filter(m => {
+    const matchTxt = !txt || m.codigo.toLowerCase().includes(txt) || m.material.toLowerCase().includes(txt);
+    const matchCat = !cat || m.categoria === cat;
+    const stock = m.stockActual !== undefined ? m.stockActual : 0;
+    const matchEst = !est || (est === 'bajo' ? stock < m.stockMin : stock >= m.stockMin);
+    return matchTxt && matchCat && matchEst;
+  });
+  renderMatTable(res);
+}
+
+function limpiarFiltros() {
+  document.getElementById('flt-buscar').value = '';
+  document.getElementById('flt-categoria').selectedIndex = 0;
+  document.getElementById('flt-estado').selectedIndex = 0;
+  renderMatTable(CATALOGO);
+}
+
+// ── DASHBOARD ────────────────────────────────────────
+function actualizarKPIs() {
+  const bajo = CATALOGO.filter(m => (m.stockActual || 0) < m.stockMin).length;
+  const ok   = CATALOGO.length - bajo;
+  const provActivos  = PROVEEDORES.filter(p => p.estado === 'ACTIVO').length;
+  const obrasActivas = OBRAS.filter(o => o.estado === 'EN EJECUCIÓN').length;
+  document.getElementById('kpi-total-mat').textContent   = CATALOGO.length;
+  document.getElementById('kpi-proveedores').textContent = provActivos;
+  document.getElementById('kpi-obras').textContent       = obrasActivas;
+  document.getElementById('kpi-stock-bajo').textContent  = bajo;
+  document.getElementById('kpi-stock-ok').textContent    = ok;
+  document.getElementById('kpi-entradas').textContent    = STATS.entradas;
+  document.getElementById('kpi-salidas').textContent     = STATS.salidas;
+  document.getElementById('kpi-mes').textContent         = STATS.movMes;
+}
+
+function renderDashboard() {
+  const cats = {};
+  CATALOGO.forEach(m => { cats[m.categoria] = (cats[m.categoria] || 0) + 1; });
+  const catDiv = document.getElementById('dash-categorias');
+  const colores = { Cementos:'#c8922a', Agregados:'#2457a4', Ladrillos:'#d4611e', Acero:'#1a7c4e',
+                    Tubería:'#0e7490', Fijación:'#5b3a8e', Madera:'#92400e', Bloques:'#1a3a6e' };
+  catDiv.innerHTML = Object.entries(cats).map(([cat, n]) => {
+    const pct = CATALOGO.length > 0 ? Math.round(n / CATALOGO.length * 100) : 0;
+    const col = colores[cat] || '#64748b';
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
+        <span><strong>${cat}</strong></span><span style="color:#64748b">${n} material${n>1?'es':''} &nbsp;${pct}%</span>
+      </div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div>
+    </div>`;
+  }).join('') || '<p style="color:#94a3b8;font-size:.82rem">Sin datos</p>';
+
+  const tbody = document.querySelector('#dash-stock-estado tbody');
+  tbody.innerHTML = CATALOGO.map(m => {
+    const stock = m.stockActual || 0;
+    const bajo  = stock < m.stockMin;
+    const pct   = m.stockMax > 0 ? Math.min(100, Math.round((stock / m.stockMax) * 100)) : 0;
+    const col   = bajo ? '#ef4444' : '#1a7c4e';
+    return `<tr>
+      <td>${m.material}</td>
+      <td style="color:#64748b">${m.unidad}</td>
+      <td><strong style="color:${col}">${stock}</strong>
+        <div class="bar-wrap" style="min-width:50px;margin-top:2px"><div class="bar-fill" style="width:${pct}%;background:${col}"></div></div>
+      </td>
+      <td>${m.stockMin}</td>
+      <td>${bajo ? '<span class="badge badge-rojo">⚠️ Bajo</span>' : '<span class="badge badge-verde">✅ OK</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  // Alertas
+  const alertas   = CATALOGO.filter(m => (m.stockActual || 0) < m.stockMin);
+  const alertBody = document.getElementById('dash-alertas-body');
+  const alertOk   = document.getElementById('dash-alertas-ok');
+  const alertTbl  = document.getElementById('dash-alertas');
+  if (alertas.length === 0) {
+    if (alertTbl) alertTbl.style.display = 'none';
+    if (alertOk)  alertOk.style.display  = 'block';
+  } else {
+    if (alertTbl) alertTbl.style.display = '';
+    if (alertOk)  alertOk.style.display  = 'none';
+    if (alertBody) alertBody.innerHTML = alertas.map(m => {
+      const stock    = m.stockActual || 0;
+      const faltante = m.stockMin - stock;
+      return `<tr>
+        <td><strong>${m.codigo}</strong></td>
+        <td>${m.material}</td>
+        <td style="color:#64748b">${m.unidad}</td>
+        <td><strong style="color:#ef4444">${stock}</strong></td>
+        <td>${m.stockMin}</td>
+        <td><strong style="color:#d4611e">+${faltante}</strong></td>
+        <td>${stock <= 0
+          ? '<span class="badge badge-rojo">⛔ Sin stock</span>'
+          : '<span class="badge badge-naranja">⚠️ Bajo mínimo</span>'}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function renderDashProveedores() {
+  const tbody = document.getElementById('dash-proveedores');
+  if (!tbody) return;
+  tbody.innerHTML = PROVEEDORES.map(p => `<tr>
+    <td><strong>${p.razon}</strong></td>
+    <td><span class="badge badge-azul">${p.categoria}</span></td>
+    <td style="font-size:.78rem;color:#64748b">${p.pago}</td>
+    <td>${p.estado === 'ACTIVO'
+      ? '<span class="badge badge-verde">Activo</span>'
+      : '<span class="badge badge-rojo">Inactivo</span>'}</td>
+  </tr>`).join('') || '<tr><td colspan="4" style="color:#94a3b8;padding:12px">Sin proveedores</td></tr>';
+}
+
+function renderDashObras() {
+  const tbody = document.getElementById('dash-obras');
+  if (!tbody) return;
+  const badges = { 'EN EJECUCIÓN':'badge-verde', 'POR INICIAR':'badge-azul', 'FINALIZADA':'badge-naranja', 'SUSPENDIDA':'badge-rojo' };
+  tbody.innerHTML = OBRAS.map(o => `<tr>
+    <td><strong>${o.codigo}</strong></td>
+    <td>${o.nombre}</td>
+    <td style="font-size:.78rem;color:#64748b">${o.responsable}</td>
+    <td><span class="badge ${badges[o.estado]||'badge-azul'}">${o.estado}</span></td>
+  </tr>`).join('') || '<tr><td colspan="4" style="color:#94a3b8;padding:12px">Sin obras</td></tr>';
+}
+
+// ── TOAST ────────────────────────────────────────────
+function toast(msg, type='success', dur=4000) {
+  const t = document.getElementById('toast');
+  t.className = 'show ' + type;
+  t.innerHTML = (type==='loading' ? '<div class="spinner"></div>' : type==='success' ? '✅' : '❌') + ' <span>' + msg + '</span>';
+  if (type !== 'loading') setTimeout(() => t.className = '', dur);
+}
+
+// ── LIMPIAR ──────────────────────────────────────────
+function limpiar(sec) {
+  const pfxMap = { entrada:'ent_', salida:'sal_', prov:'prov_', stock:'stk_', obras:'ob_' };
+  const pfx = pfxMap[sec];
+  document.querySelectorAll('[id^="' + pfx + '"]').forEach(el => {
+    if (el.readOnly) return;
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  // Limpiar campos readonly de unidad
+  ['ent_unidad','sal_unidad'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  const iso = new Date().toISOString().split('T')[0];
+  ['ent_fecha','sal_fecha'].forEach(id => { const el = document.getElementById(id); if(el) el.value = iso; });
+}
+
+// ── DATOS POR SECCIÓN ────────────────────────────────
+function getData(sec) {
+  const v  = id => (document.getElementById(id) || {}).value || '';
+  const nombreMaterial = id => {
+    const codigo = v(id);
+    if (!codigo) return '';
+    const mat = CATALOGO.find(m => m.codigo === codigo);
+    return mat ? (mat.material || mat.nombre || '') : '';
+  };
+  if (sec==='entrada') return { seccion:'ENTRADA',  fecha:v('ent_fecha'), codigo:v('ent_codigo'), material:nombreMaterial('ent_codigo'), cantidad:v('ent_cantidad'), unidad:v('ent_unidad'), proveedor:v('ent_proveedor'), factura:v('ent_factura'), recibio:v('ent_recibio'), ubicacion:v('ent_ubicacion'), observaciones:v('ent_obs') };
+  if (sec==='salida')  return { seccion:'SALIDA',   fecha:v('sal_fecha'), codigo:v('sal_codigo'), material:nombreMaterial('sal_codigo'), cantidad:v('sal_cantidad'), unidad:v('sal_unidad'), destino:v('sal_destino'), solicito:v('sal_solicito'), autorizo:v('sal_autorizo'), observaciones:v('sal_obs') };
+  if (sec==='prov')    return { seccion:'PROVEEDOR', razon_social:v('prov_razon'), cuit:v('prov_ruc'), categoria:v('prov_categoria'), estado:v('prov_estado'), contacto:v('prov_contacto'), telefono:v('prov_telefono'), email:v('prov_email'), direccion:v('prov_direccion'), condicion_pago:v('prov_pago'), observaciones:v('prov_obs') };
+  if (sec==='stock')   return { seccion:'STOCK_GENERAL', codigo:v('stk_codigo'), material:v('stk_material'), categoria:v('stk_categoria'), unidad:v('stk_unidad'), stock_min:v('stk_min'), stock_max:v('stk_max'), ubicacion:v('stk_ubicacion') };
+  if (sec==='obras')   return { seccion:'OBRA_DESTINO', codigo:v('ob_codigo'), nombre:v('ob_nombre'), ubicacion:v('ob_ubicacion'), cliente:v('ob_cliente'), responsable:v('ob_responsable'), fecha_inicio:v('ob_inicio'), fecha_fin:v('ob_fin'), estado:v('ob_estado'), observaciones:v('ob_obs') };
+}
+
+// ── ENVÍO AL SHEET ───────────────────────────────────
+async function enviar(sec) {
+  const data = getData(sec);
+  toast('Enviando datos a Google Sheets…', 'loading');
+  try {
+    // Usamos mode:'no-cors' para el POST porque el Apps Script con doPost
+    // no puede devolver CORS headers en todos los casos, pero la escritura sí funciona.
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    toast('✓ Registro guardado en Google Sheets correctamente.', 'success', 5000);
+    limpiar(sec);
+    // Recargar datos en silencio para reflejar el nuevo registro
+    setTimeout(() => cargarTodosLosDatos(true), 2500);
+  } catch(e) {
+    console.error(e);
+    toast('Error de conexión. Verifique la red e intente nuevamente.', 'error', 6000);
+  }
+}
+
+// ── FALLBACK JSONP (por si fetch falla por CORS) ─────────────────────────
+function cargarViaJsonp(silencioso) {
+  window._jsonpCallback = function(d) {
+    try {
+      if (d.catalogo)    CATALOGO    = d.catalogo;
+      if (d.proveedores) PROVEEDORES = d.proveedores;
+      if (d.obras)       OBRAS       = d.obras;
+      if (d.stats)       STATS       = d.stats;
+      if (d.stock) {
+        d.stock.forEach(s => { STOCK_ACTUAL[s.codigo] = s; });
+        CATALOGO.forEach(m => { const s = STOCK_ACTUAL[m.codigo]; m.stockActual = s ? s.stockActual : 0; });
+      }
+      CARGANDO = false;
+      poblarSelectMateriales();
+      poblarSelectProveedores();
+      poblarSelectObras();
+      actualizarKPIs();
+      renderDashboard();
+      renderMatTable(CATALOGO);
+      renderDashProveedores();
+      renderDashObras();
+      mostrarCargando(false);
+      if (silencioso) toast('Datos actualizados desde Google Sheets ✓', 'success', 3000);
+    } catch(err) {
+      mostrarCargando(false);
+      CARGANDO = false;
+      toast('Error procesando datos del servidor.', 'error', 6000);
+    }
+    // Limpiar el tag script
+    const s = document.getElementById('jsonp-script');
+    if (s) s.remove();
+    delete window._jsonpCallback;
+  };
+
+  const existente = document.getElementById('jsonp-script');
+  if (existente) existente.remove();
+  const script = document.createElement('script');
+  script.id  = 'jsonp-script';
+  script.src = APPS_SCRIPT_URL + '?action=todos&callback=_jsonpCallback';
+  script.onerror = () => {
+    mostrarCargando(false);
+    CARGANDO = false;
+    toast('No se pudo conectar a Google Sheets. Verificá que el deployment tenga acceso "Anyone".', 'error', 8000);
+    script.remove();
+  };
+  document.head.appendChild(script);
+}
+
+</script>
+</body>
+</html>
