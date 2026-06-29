@@ -184,6 +184,26 @@
   .mat-count { font-size: .78rem; color: var(--gris-label); margin-top: 10px; }
 
   footer { text-align: center; font-size: .74rem; color: #8898aa; padding: 18px; border-top: 1px solid var(--gris-borde); }
+
+  /* ── LISTA DE REGISTROS EXISTENTES ──── */
+  .lista-card { background: var(--blanco); border-radius: 12px; box-shadow: var(--sombra); overflow: hidden; margin-bottom: 20px; }
+  .lista-header { padding: 14px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--gris-borde); background: var(--gris-bg); }
+  .lista-header h3 { font-size: .88rem; font-weight: 700; color: var(--azul); flex: 1; }
+  .lista-header .count-badge { background: var(--azul-med); color: #fff; border-radius: 99px; padding: 2px 10px; font-size: .72rem; font-weight: 700; }
+  .lista-buscar { width: 100%; padding: 8px 12px; border: 1.5px solid var(--gris-borde); border-radius: 7px; font-size: .82rem; font-family: inherit; margin-bottom: 0; }
+  .lista-buscar:focus { outline: none; border-color: var(--azul-med); }
+  .lista-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; }
+  .lista-table { width: 100%; border-collapse: collapse; font-size: .81rem; }
+  .lista-table th { background: var(--azul); color: #fff; padding: 9px 12px; text-align: left; font-size: .73rem; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; position: sticky; top: 0; z-index: 1; }
+  .lista-table td { padding: 8px 12px; border-bottom: 1px solid var(--gris-borde); vertical-align: middle; }
+  .lista-table tr:hover td { background: #f0f5ff; }
+  .btn-editar { padding: 5px 12px; border-radius: 6px; border: 1.5px solid var(--azul-med); background: var(--azul-claro); color: var(--azul-med); font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .18s; }
+  .btn-editar:hover { background: var(--azul-med); color: #fff; }
+  .lista-filtros { padding: 10px 14px; background: var(--gris-bg); border-bottom: 1px solid var(--gris-borde); }
+  .edit-banner { background: var(--dorado-clr); border-left: 4px solid var(--dorado); border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: .8rem; color: var(--amarillo); font-weight: 600; margin-bottom: 16px; display: none; align-items: center; gap: 10px; }
+  .edit-banner.visible { display: flex; }
+  .edit-banner button { margin-left: auto; background: var(--dorado); color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: .75rem; cursor: pointer; font-weight: 700; }
+  .lista-empty { text-align: center; padding: 28px; color: #94a3b8; font-size: .83rem; }
 </style>
 </head>
 <body>
@@ -212,11 +232,11 @@
 
 <div class="tabs-bar">
   <button class="tab-btn active"  onclick="showTab('mat',this)">     <span>📋</span> Materiales en Stock</button>
-  <button class="tab-btn"         onclick="showTab('entrada',this)"> <span>📥</span> Entrada</button>
-  <button class="tab-btn"         onclick="showTab('salida',this)">  <span>📤</span> Salida</button>
-  <button class="tab-btn"         onclick="showTab('prov',this)">    <span>🏢</span> Proveedores</button>
-  <button class="tab-btn"         onclick="showTab('stock',this)">   <span>📦</span> Stock General</button>
+  <button class="tab-btn"         onclick="showTab('entrada',this)"> <span>📥</span> Entrada de Material</button>
+  <button class="tab-btn"         onclick="showTab('salida',this)">  <span>📤</span> Salida de Material</button>
+  <button class="tab-btn"         onclick="showTab('stock',this)">   <span>📦</span> Nuevo Material</button>
   <button class="tab-btn"         onclick="showTab('obras',this)">   <span>🏗️</span> Destino / Obras</button>
+  <button class="tab-btn"         onclick="showTab('prov',this)">    <span>🏢</span> Proveedores</button>
 </div>
 
 <main>
@@ -563,12 +583,39 @@
 
 <!-- ══ PROVEEDORES ════════════════════════════════════ -->
 <div id="sec-prov" class="section">
+
+  <!-- Lista de proveedores existentes -->
+  <div class="lista-card sec-prov">
+    <div class="lista-header">
+      <span>🏢</span>
+      <h3>Proveedores registrados</h3>
+      <span class="count-badge" id="prov-lista-count">0</span>
+    </div>
+    <div class="lista-filtros">
+      <input class="lista-buscar" type="text" id="prov-lista-buscar" placeholder="🔍 Buscar por razón social, categoría o estado…" oninput="filtrarListaProv()">
+    </div>
+    <div class="lista-wrap">
+      <table class="lista-table">
+        <thead>
+          <tr><th>Razón Social</th><th>CUIT</th><th>Categoría</th><th>Contacto</th><th>Teléfono</th><th>Cond. Pago</th><th>Estado</th><th>Acción</th></tr>
+        </thead>
+        <tbody id="prov-lista-tbody">
+          <tr><td colspan="8" class="lista-empty">Cargando datos…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="card sec-prov">
     <div class="card-header">
       <div class="icon-circle">🏢</div>
       <div><h2>Registro de Proveedores</h2><p>Alta o actualización de proveedores habilitados para el corralón.</p></div>
     </div>
     <div class="card-body">
+      <div class="edit-banner" id="prov-edit-banner">
+        ✏️ <span id="prov-edit-msg">Editando proveedor</span>
+        <button onclick="cancelarEdicion('prov')">✕ Cancelar edición</button>
+      </div>
       <div class="divider">Datos de la empresa</div>
       <div class="grid grid-2" style="margin-top:12px">
         <div class="field"><label>Razón social</label><input type="text" id="prov_razon" placeholder="Nombre legal de la empresa"></div>
@@ -613,15 +660,43 @@
     </div>
   </div>
 </div>
+</div>
 
 <!-- ══ STOCK GENERAL ══════════════════════════════════ -->
 <div id="sec-stock" class="section">
+
+  <!-- Lista de materiales existentes -->
+  <div class="lista-card sec-stock">
+    <div class="lista-header">
+      <span>📦</span>
+      <h3>Materiales registrados</h3>
+      <span class="count-badge" id="stk-lista-count">0</span>
+    </div>
+    <div class="lista-filtros">
+      <input class="lista-buscar" type="text" id="stk-lista-buscar" placeholder="🔍 Buscar por código, nombre o categoría…" oninput="filtrarListaStock()">
+    </div>
+    <div class="lista-wrap">
+      <table class="lista-table">
+        <thead>
+          <tr><th>Código</th><th>Material</th><th>Categoría</th><th>Unidad</th><th>Stock Mín.</th><th>Stock Máx.</th><th>Ubicación</th><th>Acción</th></tr>
+        </thead>
+        <tbody id="stk-lista-tbody">
+          <tr><td colspan="8" class="lista-empty">Cargando datos…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="card sec-stock">
     <div class="card-header">
       <div class="icon-circle">📦</div>
-      <div><h2>Stock General – Catálogo de Materiales</h2><p>Alta o modificación de materiales en el catálogo maestro.</p></div>
+      <div><h2>Nuevo Material – Catálogo de Materiales</h2><p>Alta o modificación de materiales en el catálogo maestro.</p></div>
     </div>
     <div class="card-body">
+      <div class="edit-banner" id="stk-edit-banner">
+        ✏️ <span id="stk-edit-msg">Editando material</span>
+        <button onclick="cancelarEdicion('stk')">✕ Cancelar edición</button>
+      </div>
       <div class="info-box">Use esta sección para agregar nuevos materiales al catálogo o actualizar parámetros de stock. Los cambios se reflejan automáticamente en Entradas y Salidas.</div>
       <div class="grid grid-2">
         <div class="field"><label>Código de material</label><input type="text" id="stk_codigo" placeholder="Ej: MAT-016"></div>
@@ -659,6 +734,16 @@
           </select>
         </div>
       </div>
+      <div class="divider" style="margin-top:20px">Stock inicial</div>
+      <div class="grid grid-2" style="margin-top:12px">
+        <div class="field">
+          <label>Cantidad de stock inicial</label>
+          <input type="number" id="stk_stock_inicial" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="field" style="align-self:flex-end">
+          <div class="info-box" style="margin-bottom:0">Este valor se registrará directamente como stock existente en el catálogo, sin necesidad de cargar una entrada por separado.</div>
+        </div>
+      </div>
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="limpiar('stock')">🗑 Limpiar</button>
         <button class="btn btn-primary sec-stock-btn" onclick="enviar('stock')">✅ Guardar en Catálogo</button>
@@ -666,15 +751,43 @@
     </div>
   </div>
 </div>
+</div>
 
 <!-- ══ OBRAS / DESTINOS ═══════════════════════════════ -->
 <div id="sec-obras" class="section">
+
+  <!-- Lista de obras existentes -->
+  <div class="lista-card sec-obras">
+    <div class="lista-header">
+      <span>🏗️</span>
+      <h3>Obras registradas</h3>
+      <span class="count-badge" id="ob-lista-count">0</span>
+    </div>
+    <div class="lista-filtros">
+      <input class="lista-buscar" type="text" id="ob-lista-buscar" placeholder="🔍 Buscar por código, nombre o estado…" oninput="filtrarListaObras()">
+    </div>
+    <div class="lista-wrap">
+      <table class="lista-table">
+        <thead>
+          <tr><th>Código</th><th>Nombre / Descripción</th><th>Ubicación</th><th>Responsable</th><th>Inicio</th><th>Fin est.</th><th>Estado</th><th>Acción</th></tr>
+        </thead>
+        <tbody id="ob-lista-tbody">
+          <tr><td colspan="8" class="lista-empty">Cargando datos…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="card sec-obras">
     <div class="card-header">
       <div class="icon-circle">🏗️</div>
       <div><h2>Registro de Obras y Destinos</h2><p>Alta de obras o destinos que recibirán materiales del corralón.</p></div>
     </div>
     <div class="card-body">
+      <div class="edit-banner" id="ob-edit-banner">
+        ✏️ <span id="ob-edit-msg">Editando obra</span>
+        <button onclick="cancelarEdicion('ob')">✕ Cancelar edición</button>
+      </div>
       <div class="grid grid-2">
         <div class="field"><label>Código de obra</label><input type="text" id="ob_codigo" placeholder="Ej: OB-009"></div>
         <div class="field"><label>Nombre / Descripción de obra</label><input type="text" id="ob_nombre" placeholder="Ej: Pavimentación Calle Mitre"></div>
@@ -701,6 +814,7 @@
     </div>
   </div>
 </div>
+</div>
 
 </main>
 <footer>Municipio de Esquina · Dirección de Obras Públicas &nbsp;|&nbsp; Sistema de Control de Stock de Corralones &nbsp;|&nbsp; 2025–2026</footer>
@@ -712,7 +826,7 @@
 //  HTML v3 — conectado a Google Sheets en tiempo real
 //  Reemplazar la URL con la del nuevo deployment de Apps Script
 // ════════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxVjAIlLTJrhPfVQtGzViiEqglLD3YNA9ENXWYQPdV2wfj4rrU2RTLGf_9Zr1yRLAsM/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywGNP25pKwUEkMM0YNet1JBSZaPUA1--O3PDMv4WGDLnUc4nU30_C3_V1-emXj3vGb/exec';
 
 // Datos en memoria — se cargan desde el Sheet al iniciar
 let CATALOGO     = [];
@@ -768,6 +882,9 @@ async function cargarTodosLosDatos(silencioso = false) {
     renderMatTable(CATALOGO);
     renderDashProveedores();
     renderDashObras();
+    renderListaProveedores(PROVEEDORES);
+    renderListaStock(CATALOGO);
+    renderListaObras(OBRAS);
     if (!silencioso) mostrarCargando(false);
     else toast('Datos actualizados desde Google Sheets ✓', 'success', 3000);
   } catch(e) {
@@ -1025,6 +1142,192 @@ function toast(msg, type='success', dur=4000) {
   if (type !== 'loading') setTimeout(() => t.className = '', dur);
 }
 
+// ── LISTAS DE REGISTROS EXISTENTES ──────────────────
+
+// Estado de edición por sección
+const EDITANDO = { prov: null, stk: null, ob: null };
+
+function renderListaProveedores(lista) {
+  const tbody = document.getElementById('prov-lista-tbody');
+  const count = document.getElementById('prov-lista-count');
+  if (!tbody) return;
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="lista-empty">Sin proveedores registrados aún.</td></tr>';
+    if (count) count.textContent = '0';
+    return;
+  }
+  if (count) count.textContent = lista.length;
+  tbody.innerHTML = lista.map((p, i) => {
+    const activo = ['ACTIVO','Activo'].includes(p.estado);
+    const badge  = activo
+      ? '<span class="badge badge-verde">Activo</span>'
+      : '<span class="badge badge-rojo">Inactivo</span>';
+    return `<tr>
+      <td><strong>${p.razon||'—'}</strong></td>
+      <td style="font-size:.75rem;color:#64748b">${p.cuit||p.ruc||'—'}</td>
+      <td><span class="badge badge-azul">${p.categoria||'—'}</span></td>
+      <td style="font-size:.75rem">${p.contacto||'—'}</td>
+      <td style="font-size:.75rem">${p.telefono||'—'}</td>
+      <td style="font-size:.75rem">${p.condicion_pago||p.pago||'—'}</td>
+      <td>${badge}</td>
+      <td><button class="btn-editar" onclick="editarProveedor(${i})">✏️ Editar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filtrarListaProv() {
+  const txt = (document.getElementById('prov-lista-buscar').value || '').toLowerCase();
+  const res = txt ? PROVEEDORES.filter(p =>
+    (p.razon||'').toLowerCase().includes(txt) ||
+    (p.categoria||'').toLowerCase().includes(txt) ||
+    (p.estado||'').toLowerCase().includes(txt)
+  ) : PROVEEDORES;
+  renderListaProveedores(res);
+}
+
+function editarProveedor(idx) {
+  const p = PROVEEDORES[idx];
+  if (!p) return;
+  EDITANDO.prov = idx;
+  document.getElementById('prov_razon').value      = p.razon || '';
+  document.getElementById('prov_ruc').value        = p.cuit || p.ruc || '';
+  document.getElementById('prov_contacto').value   = p.contacto || '';
+  document.getElementById('prov_telefono').value   = p.telefono || '';
+  document.getElementById('prov_email').value      = p.email || '';
+  document.getElementById('prov_direccion').value  = p.direccion || '';
+  document.getElementById('prov_obs').value        = p.observaciones || p.obs || '';
+  const sel = v => s => { const e = document.getElementById(s); if(e) e.value = v; };
+  setSelectValue('prov_categoria', p.categoria);
+  setSelectValue('prov_estado',    p.estado);
+  setSelectValue('prov_pago',      p.condicion_pago || p.pago);
+  const banner = document.getElementById('prov-edit-banner');
+  document.getElementById('prov-edit-msg').textContent = `Editando: ${p.razon}`;
+  banner.classList.add('visible');
+  document.getElementById('sec-prov').querySelector('.card').scrollIntoView({ behavior:'smooth', block:'start' });
+  showTab('prov', document.querySelector('.tab-btn[onclick*="prov"]'));
+}
+
+function renderListaStock(lista) {
+  const tbody = document.getElementById('stk-lista-tbody');
+  const count = document.getElementById('stk-lista-count');
+  if (!tbody) return;
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="lista-empty">Sin materiales registrados aún.</td></tr>';
+    if (count) count.textContent = '0';
+    return;
+  }
+  if (count) count.textContent = lista.length;
+  tbody.innerHTML = lista.map((m, i) => `<tr>
+    <td><strong>${m.codigo||'—'}</strong></td>
+    <td>${m.material||'—'}</td>
+    <td><span class="badge badge-azul">${m.categoria||'—'}</span></td>
+    <td style="color:#64748b">${m.unidad||'—'}</td>
+    <td>${m.stockMin||0}</td>
+    <td>${m.stockMax||0}</td>
+    <td style="font-size:.75rem">${m.ubicacion||'—'}</td>
+    <td><button class="btn-editar" onclick="editarStock(${i})">✏️ Editar</button></td>
+  </tr>`).join('');
+}
+
+function filtrarListaStock() {
+  const txt = (document.getElementById('stk-lista-buscar').value || '').toLowerCase();
+  const res = txt ? CATALOGO.filter(m =>
+    (m.codigo||'').toLowerCase().includes(txt) ||
+    (m.material||'').toLowerCase().includes(txt) ||
+    (m.categoria||'').toLowerCase().includes(txt)
+  ) : CATALOGO;
+  renderListaStock(res);
+}
+
+function editarStock(idx) {
+  const m = CATALOGO[idx];
+  if (!m) return;
+  EDITANDO.stk = idx;
+  document.getElementById('stk_codigo').value    = m.codigo || '';
+  document.getElementById('stk_material').value  = m.material || '';
+  document.getElementById('stk_min').value       = m.stockMin || '';
+  document.getElementById('stk_max').value       = m.stockMax || '';
+  setSelectValue('stk_categoria', m.categoria);
+  setSelectValue('stk_unidad',    m.unidad);
+  setSelectValue('stk_ubicacion', m.ubicacion);
+  const banner = document.getElementById('stk-edit-banner');
+  document.getElementById('stk-edit-msg').textContent = `Editando: ${m.codigo} – ${m.material}`;
+  banner.classList.add('visible');
+  document.getElementById('sec-stock').querySelector('.card').scrollIntoView({ behavior:'smooth', block:'start' });
+  showTab('stock', document.querySelector('.tab-btn[onclick*="stock"]'));
+}
+
+function renderListaObras(lista) {
+  const tbody = document.getElementById('ob-lista-tbody');
+  const count = document.getElementById('ob-lista-count');
+  if (!tbody) return;
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="lista-empty">Sin obras registradas aún.</td></tr>';
+    if (count) count.textContent = '0';
+    return;
+  }
+  if (count) count.textContent = lista.length;
+  const badgesCls = { 'EN EJECUCIÓN':'badge-verde', 'POR INICIAR':'badge-azul', 'FINALIZADA':'badge-naranja', 'SUSPENDIDA':'badge-rojo' };
+  tbody.innerHTML = lista.map((o, i) => `<tr>
+    <td><strong>${o.codigo||'—'}</strong></td>
+    <td>${o.nombre||'—'}</td>
+    <td style="font-size:.75rem">${o.ubicacion||'—'}</td>
+    <td style="font-size:.75rem">${o.responsable||'—'}</td>
+    <td style="font-size:.75rem;color:#64748b">${o.fecha_inicio||o.fechaInicio||'—'}</td>
+    <td style="font-size:.75rem;color:#64748b">${o.fecha_fin||o.fechaFin||'—'}</td>
+    <td><span class="badge ${badgesCls[o.estado]||'badge-azul'}">${o.estado||'—'}</span></td>
+    <td><button class="btn-editar" onclick="editarObra(${i})">✏️ Editar</button></td>
+  </tr>`).join('');
+}
+
+function filtrarListaObras() {
+  const txt = (document.getElementById('ob-lista-buscar').value || '').toLowerCase();
+  const res = txt ? OBRAS.filter(o =>
+    (o.codigo||'').toLowerCase().includes(txt) ||
+    (o.nombre||'').toLowerCase().includes(txt) ||
+    (o.estado||'').toLowerCase().includes(txt)
+  ) : OBRAS;
+  renderListaObras(res);
+}
+
+function editarObra(idx) {
+  const o = OBRAS[idx];
+  if (!o) return;
+  EDITANDO.ob = idx;
+  document.getElementById('ob_codigo').value       = o.codigo || '';
+  document.getElementById('ob_nombre').value       = o.nombre || '';
+  document.getElementById('ob_ubicacion').value    = o.ubicacion || '';
+  document.getElementById('ob_cliente').value      = o.cliente || '';
+  document.getElementById('ob_responsable').value  = o.responsable || '';
+  document.getElementById('ob_inicio').value       = o.fecha_inicio || o.fechaInicio || '';
+  document.getElementById('ob_fin').value          = o.fecha_fin || o.fechaFin || '';
+  document.getElementById('ob_obs').value          = o.observaciones || o.obs || '';
+  setSelectValue('ob_estado', o.estado);
+  const banner = document.getElementById('ob-edit-banner');
+  document.getElementById('ob-edit-msg').textContent = `Editando: ${o.codigo} – ${o.nombre}`;
+  banner.classList.add('visible');
+  document.getElementById('sec-obras').querySelector('.card').scrollIntoView({ behavior:'smooth', block:'start' });
+  showTab('obras', document.querySelector('.tab-btn[onclick*="obras"]'));
+}
+
+function cancelarEdicion(sec) {
+  EDITANDO[sec] = null;
+  const banner = document.getElementById(sec + '-edit-banner');
+  if (banner) banner.classList.remove('visible');
+  limpiar(sec === 'prov' ? 'prov' : sec === 'stk' ? 'stock' : 'obras');
+}
+
+function setSelectValue(id, val) {
+  const el = document.getElementById(id);
+  if (!el || !val) return;
+  for (let i = 0; i < el.options.length; i++) {
+    if (el.options[i].value === val || el.options[i].textContent === val) {
+      el.selectedIndex = i;
+      return;
+    }
+  }
+}
+
 // ── LIMPIAR ──────────────────────────────────────────
 function limpiar(sec) {
   const pfxMap = { entrada:'ent_', salida:'sal_', prov:'prov_', stock:'stk_', obras:'ob_' };
@@ -1051,28 +1354,45 @@ function getData(sec) {
   };
   if (sec==='entrada') return { seccion:'ENTRADA',  fecha:v('ent_fecha'), codigo:v('ent_codigo'), material:nombreMaterial('ent_codigo'), cantidad:v('ent_cantidad'), unidad:v('ent_unidad'), proveedor:v('ent_proveedor'), factura:v('ent_factura'), recibio:v('ent_recibio'), ubicacion:v('ent_ubicacion'), observaciones:v('ent_obs') };
   if (sec==='salida')  return { seccion:'SALIDA',   fecha:v('sal_fecha'), codigo:v('sal_codigo'), material:nombreMaterial('sal_codigo'), cantidad:v('sal_cantidad'), unidad:v('sal_unidad'), destino:v('sal_destino'), solicito:v('sal_solicito'), autorizo:v('sal_autorizo'), observaciones:v('sal_obs') };
-  if (sec==='prov')    return { seccion:'PROVEEDOR', razon_social:v('prov_razon'), cuit:v('prov_ruc'), categoria:v('prov_categoria'), estado:v('prov_estado'), contacto:v('prov_contacto'), telefono:v('prov_telefono'), email:v('prov_email'), direccion:v('prov_direccion'), condicion_pago:v('prov_pago'), observaciones:v('prov_obs') };
-  if (sec==='stock')   return { seccion:'STOCK_GENERAL', codigo:v('stk_codigo'), material:v('stk_material'), categoria:v('stk_categoria'), unidad:v('stk_unidad'), stock_min:v('stk_min'), stock_max:v('stk_max'), ubicacion:v('stk_ubicacion') };
-  if (sec==='obras')   return { seccion:'OBRA_DESTINO', codigo:v('ob_codigo'), nombre:v('ob_nombre'), ubicacion:v('ob_ubicacion'), cliente:v('ob_cliente'), responsable:v('ob_responsable'), fecha_inicio:v('ob_inicio'), fecha_fin:v('ob_fin'), estado:v('ob_estado'), observaciones:v('ob_obs') };
+  if (sec==='prov')    return { seccion:'PROVEEDOR', razon_social:v('prov_razon'), cuit:v('prov_ruc'), categoria:v('prov_categoria'), estado:v('prov_estado'), contacto:v('prov_contacto'), telefono:v('prov_telefono'), email:v('prov_email'), direccion:v('prov_direccion'), condicion_pago:v('prov_pago'), observaciones:v('prov_obs'), _editar: EDITANDO.prov !== null };
+  if (sec==='stock')   return { seccion:'STOCK_GENERAL', codigo:v('stk_codigo'), material:v('stk_material'), categoria:v('stk_categoria'), unidad:v('stk_unidad'), stock_min:v('stk_min'), stock_max:v('stk_max'), ubicacion:v('stk_ubicacion'), stock_inicial:v('stk_stock_inicial'), _editar: EDITANDO.stk !== null };
+  if (sec==='obras')   return { seccion:'OBRA_DESTINO', codigo:v('ob_codigo'), nombre:v('ob_nombre'), ubicacion:v('ob_ubicacion'), cliente:v('ob_cliente'), responsable:v('ob_responsable'), fecha_inicio:v('ob_inicio'), fecha_fin:v('ob_fin'), estado:v('ob_estado'), observaciones:v('ob_obs'), _editar: EDITANDO.ob !== null };
 }
 
 // ── ENVÍO AL SHEET ───────────────────────────────────
 async function enviar(sec) {
+  // Capturar datos Y el flag de edición ANTES de tocar nada
   const data = getData(sec);
-  toast('Enviando datos a Google Sheets…', 'loading');
+  const esEdicion = data._editar === true;
+
+  // Validación mínima
+  if (sec === 'prov'  && !data.razon_social) { toast('Ingresá la razón social.', 'error'); return; }
+  if (sec === 'obras' && !data.codigo)       { toast('Ingresá el código de obra.', 'error'); return; }
+  if (sec === 'stock' && !data.codigo)       { toast('Ingresá el código de material.', 'error'); return; }
+
+  toast((esEdicion ? 'Actualizando' : 'Guardando') + ' datos en Google Sheets…', 'loading');
+
   try {
-    // Usamos mode:'no-cors' para el POST porque el Apps Script con doPost
-    // no puede devolver CORS headers en todos los casos, pero la escritura sí funciona.
     await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    toast('✓ Registro guardado en Google Sheets correctamente.', 'success', 5000);
+
+    toast('✓ Registro ' + (esEdicion ? 'actualizado' : 'guardado') + ' correctamente.', 'success', 5000);
+
+    // Limpiar estado de edición DESPUÉS del envío exitoso
+    const secMap = { prov:'prov', stock:'stk', obras:'ob' };
+    const editKey = secMap[sec];
+    if (editKey) {
+      EDITANDO[editKey] = null;
+      const banner = document.getElementById(editKey + '-edit-banner');
+      if (banner) banner.classList.remove('visible');
+    }
     limpiar(sec);
-    // Recargar datos en silencio para reflejar el nuevo registro
     setTimeout(() => cargarTodosLosDatos(true), 2500);
+
   } catch(e) {
     console.error(e);
     toast('Error de conexión. Verifique la red e intente nuevamente.', 'error', 6000);
@@ -1100,6 +1420,9 @@ function cargarViaJsonp(silencioso) {
       renderMatTable(CATALOGO);
       renderDashProveedores();
       renderDashObras();
+      renderListaProveedores(PROVEEDORES);
+      renderListaStock(CATALOGO);
+      renderListaObras(OBRAS);
       mostrarCargando(false);
       if (silencioso) toast('Datos actualizados desde Google Sheets ✓', 'success', 3000);
     } catch(err) {
